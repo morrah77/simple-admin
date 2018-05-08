@@ -1,0 +1,40 @@
+version: '2'
+services:
+  backend:
+    image: simple-admin-backend
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    command: bash -c "/go/src/github.com/morrah77/simple-admin/bin/main --listen-addr :8080 --api-path /simple-admin/v0 --storage postgres --dsn 'host=postgres port=5432 user=postgres password=changeit dbname=simple-admin sslmode=disable'"
+    ports:
+      - 8080:8080
+    networks:
+      - simple-admin
+  frontend:
+      image: frontend
+      restart: unless-stopped
+      depends_on:
+        - backend
+      ports:
+        - 8081:8081
+      networks:
+        - simple-admin
+  postgres:
+    image: postgres:9.6.8
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: changeit
+      POSTGRES_DB: simple-admin
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - simple-admin
+volumes:
+  pgdata:
+    driver: local
+networks:
+  simple-admin:
